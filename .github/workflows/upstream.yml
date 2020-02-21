@@ -9,13 +9,13 @@
 name: Merge-upstream
 
 on:
-#  schedule:
-#    - cron: 0 22 * * *
+ schedule:
+   - cron: 0 22 * * *
 #   push:
 #     branches: 
 #       - master
-   watch:
-     types: [started]
+#    watch:
+#      types: [started]
 
 jobs:
 

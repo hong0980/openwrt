@@ -17,12 +17,29 @@ m = Map(vssr)
 m:section(SimpleSection).template  = "vssr/status_top"
 
 local server_table = {}
-
+local tw_table = {}
+local tvb_table = {}
 uci:foreach(vssr, "servers", function(s)
 	if s.alias then
 		server_table[s[".name"]] = "[%s]:%s" %{string.upper(s.type), s.alias}
 	elseif s.server and s.server_port then
 		server_table[s[".name"]] = "[%s]:%s:%s" %{string.upper(s.type), s.server, s.server_port}
+	end
+    
+    if s.flag == "tw"	then
+		if s.alias then
+			tw_table[s[".name"]] = "[%s]:%s" %{string.upper(s.type), s.alias}
+		elseif s.server and s.server_port then
+			tw_table[s[".name"]] = "[%s]:%s:%s" %{string.upper(s.type), s.server, s.server_port}
+		end
+	end
+    
+    if s.flag == "hk"	then
+		if s.alias then
+			tvb_table[s[".name"]] = "[%s]:%s" %{string.upper(s.type), s.alias}
+		elseif s.server and s.server_port then
+			tvb_table[s[".name"]] = "[%s]:%s:%s" %{string.upper(s.type), s.server, s.server_port}
+		end
 	end
 
 end)
@@ -32,7 +49,23 @@ for key,_ in pairs(server_table) do
     table.insert(key_table,key)  
 end 
 
+local key_table_tw = {}  
+for key,_ in pairs(tw_table) do  
+    table.insert(key_table_tw,key)  
+end 
+
+local key_table_tvb = {}  
+for key,_ in pairs(tvb_table) do  
+    table.insert(key_table_tvb,key)  
+end 
+
+
+
 table.sort(key_table) 
+table.sort(key_table_tw)
+table.sort(key_table_tvb)
+local route_name = {"youtube_server","tw_video_server","netflix_server","disney_server","prime_server","tvb_server","custom_server"}
+local route_label = {"Youtube Proxy","TaiWan Video Proxy","Netflix Proxy","Diseny+ Proxy","Prime Video Proxy","TVB Video Proxy","Custom Proxy"}
 
 -- [[ Global Setting ]]--
 s = m:section(TypedSection, "global",translate("Basic Settings [SS|SSR|V2ray|Trojan]"))
@@ -53,46 +86,19 @@ o = s:option(Flag, "v2ray_flow", translate("Open v2ray route"))
 o.rmempty = false
 o.description = translate("When open v2ray routed,Apply may take more time.")
 
-o = s:option(ListValue, "youtube_server", translate("Youtube Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
-
-
-
-o = s:option(ListValue, "tw_video_server", translate("TaiWan Video Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
-
-
-o = s:option(ListValue, "netflix_server", translate("Netflix Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
-
-
-o = s:option(ListValue, "disney_server", translate("Diseny+ Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
-
-
-o = s:option(ListValue, "prime_server", translate("Prime Video Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
-
-o = s:option(ListValue, "tvb_server", translate("TVB Video Proxy"))
-o:value("nil", translate("Same as Main Server"))
-for _,key in pairs(key_table) do o:value(key,server_table[key]) end
-o:depends("v2ray_flow", "1")
-o.default = "nil"
+for i,v in pairs(route_name) do  
+	o = s:option(ListValue, v, translate(route_label[i]))
+	o:value("nil", translate("Same as Main Server"))
+    if(v == "tw_video_server") then
+        for _,key in pairs(key_table_tw) do o:value(key,tw_table[key]) end
+    elseif(v == "tvb_server") then
+        for _,key in pairs(key_table_tvb) do o:value(key,tvb_table[key]) end
+    else
+        for _,key in pairs(key_table) do o:value(key,server_table[key]) end
+    end
+	o:depends("v2ray_flow", "1")
+	o.default = "nil"
+end 
 
 o = s:option(ListValue, "threads", translate("Multi Threads Option"))
 o:value("0", translate("Auto Threads"))
